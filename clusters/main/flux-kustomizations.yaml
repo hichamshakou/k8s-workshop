@@ -64,5 +64,3 @@ spec:
   wait: true
   timeout: 5m
   retryInterval: 30s
-  # avoids server schema validation before CRDs are ready
-  validation: client
