@@ -10,7 +10,6 @@ spec:
     kind: GitRepository
     name: flux-system
   path: ./infrastructure/namespaces
-  targetNamespace: flux-system
   timeout: 2m
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
