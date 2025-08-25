@@ -12,15 +12,9 @@ spec:
         kind: HelmRepository
         name: jetstack
         namespace: cert-manager
-      # version: "v1.15.x"   # <-- (optional) pin a version when you’re ready
   install:
     crds: Create
   upgrade:
     crds: CreateReplace
   values:
     installCRDs: true
-    # Enable ServiceMonitor if you run Prometheus Operator:
-    prometheus:
-      enabled: false
-      servicemonitor:
-        enabled: false
