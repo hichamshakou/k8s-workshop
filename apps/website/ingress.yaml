@@ -4,14 +4,14 @@ metadata:
   name: web
   namespace: website
   annotations:
-    # external-dns will create DNS for workshop.dacoso.de if you're running it
-    # external-dns.alpha.kubernetes.io/ttl: "60"
+    external-dns.alpha.kubernetes.io/hostname: workshop.dacoso.de
+    external-dns.alpha.kubernetes.io/ttl: "60"
 spec:
   ingressClassName: traefik
   tls:
     - hosts:
         - workshop.dacoso.de
-      secretName: website-tls             # must match Certificate.spec.secretName
+      secretName: website-tls
   rules:
     - host: workshop.dacoso.de
       http:
