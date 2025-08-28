@@ -25,3 +25,6 @@ spec:
       name: traefik
     service:
       type: LoadBalancer
+    ingressRoute:
+      dashboard:
+        enabled: true
