@@ -9,11 +9,10 @@ metadata:
 spec:
   ingressClassName: traefik
   tls:
-    - hosts:
-        - workshop.dacoso.de
+    - hosts: [127.0.0.1.sslip.io]
       secretName: website-tls
   rules:
-    - host: workshop.dacoso.de
+    - host: 127.0.0.1.sslip.io
       http:
         paths:
           - path: /
