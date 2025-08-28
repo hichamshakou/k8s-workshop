@@ -12,13 +12,12 @@ spec:
         kind: HelmRepository
         name: hashicorp
         namespace: vault
-      # version: ">=0.28.0 <1.0.0"  # <-- (optional) pin a safe range when you’re ready
   values:
     global:
       enabled: true
     server:
       ha:
-        enabled: false          # standalone
+        enabled: false
       dev:
         enabled: false
       dataStorage:
@@ -27,12 +26,5 @@ spec:
         enabled: false
       service:
         type: ClusterIP
-      # Uncomment to expose via Ingress later:
-      # ingress:
-      #   enabled: true
-      #   ingressClassName: traefik
-      #   hosts:
-      #     - host: vault.example.local
-      #       paths: ["/"]
     injector:
-      enabled: true             # webhook for secrets injection
+      enabled: true

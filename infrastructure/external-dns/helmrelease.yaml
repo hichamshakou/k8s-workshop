@@ -1,0 +1,27 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: external-dns
+  namespace: external-dns
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: external-dns
+      sourceRef:
+        kind: HelmRepository
+        name: external-dns
+        namespace: external-dns
+  values:
+    sources:
+      - ingress
+    policy: upsert-only
+    txtPrefix: ""
+    registry: txt
+    txtOwnerId: k8s-workshop
+    domainFilters:
+      - dacoso.de
+    publishService:
+      enabled: true
+      path: "traefik/traefik" 
