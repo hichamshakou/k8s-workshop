@@ -37,7 +37,6 @@ metadata:
 spec:
   dependsOn:
     - name: infra-namespaces
-    - name: cert-manager
   interval: 1m
   prune: true
   sourceRef:
