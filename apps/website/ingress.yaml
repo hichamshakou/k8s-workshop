@@ -3,9 +3,6 @@ kind: Ingress
 metadata:
   name: web
   namespace: website
-  annotations:
-    external-dns.alpha.kubernetes.io/hostname: workshop.dacoso.de
-    external-dns.alpha.kubernetes.io/ttl: "60"
 spec:
   ingressClassName: traefik
   tls:
