@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-pki-init
+  namespace: vault
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: default
+      containers:
+      - name: vault-pki-init
+        image: hashicorp/vault:1.17.2
+        env:
+          - name: VAULT_ADDR
+            value: http://vault.vault.svc.cluster.local:8200
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            vault secrets enable pki || true
+            vault secrets tune -max-lease-ttl=87600h pki
+
+            vault write -field=certificate pki/root/generate/internal \
+                common_name="testhicham.com" ttl=87600h > /tmp/ca.crt
+
+            vault write pki/config/urls \
+                issuing_certificates="$VAULT_ADDR/v1/pki/ca" \
+                crl_distribution_points="$VAULT_ADDR/v1/pki/crl"
+
+            vault write pki/roles/website \
+                allowed_domains="testhicham.com" \
+                allow_subdomains=true \
+                allow_bare_domains=true \
+                max_ttl="72h"

@@ -7,8 +7,23 @@ spec:
   secretName: website-tls
   issuerRef:
     kind: ClusterIssuer
-    name: selfsigned
+    name: vault-issuer
   dnsNames:
     - testhicham.com
+    - www.testhicham.com
 
-#test
+
+# apiVersion: cert-manager.io/v1
+# kind: Certificate
+# metadata:
+#   name: website-cert
+#   namespace: website
+# spec:
+#   secretName: website-tls
+#   issuerRef:
+#     kind: ClusterIssuer
+#     name: selfsigned
+#   dnsNames:
+#     - testhicham.com
+
+# #test

@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-auth-init
+  namespace: vault
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: vault-auth-init
+        image: hashicorp/vault:1.17.2
+        env:
+          - name: VAULT_ADDR
+            value: http://vault.vault.svc.cluster.local:8200
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            vault auth enable kubernetes || true
+
+            vault write auth/kubernetes/config \
+              kubernetes_host="https://$KUBERNETES_PORT_443_TCP_ADDR:443"
+
+            vault policy write cert-manager /vault/userconfig/policy-cert-manager.hcl
+
+            vault write auth/kubernetes/role/cert-manager \
+              bound_service_account_names=cert-manager \
+              bound_service_account_namespaces=cert-manager \
+              policies=cert-manager \
+              ttl=1h
+        volumeMounts:
+          - name: policy
+            mountPath: /vault/userconfig
+      volumes:
+        - name: policy
+          configMap:
+            name: vault-policies
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-policies
+  namespace: vault
+data:
+  policy-cert-manager.hcl: |
+    path "pki*" {
+      capabilities = ["read", "list"]
+    }
+    path "pki/sign/website" {
+      capabilities = ["create", "update"]
+    }
+    path "pki/issue/website" {
+      capabilities = ["create"]
+    }

@@ -22,3 +22,11 @@ spec:
             httpGet: { path: "/", port: 8080 }
           livenessProbe:
             httpGet: { path: "/", port: 8080 }
+  volumeMounts:
+  - name: tls
+    mountPath: /etc/tls
+    readOnly: true
+  volumes:
+    - name: tls
+      secret:
+        secretName: website-tls

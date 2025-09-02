@@ -8,23 +8,23 @@ spec:
   chart:
     spec:
       chart: vault
+      version: "0.28.x"
       sourceRef:
         kind: HelmRepository
         name: hashicorp
         namespace: vault
   values:
-    global:
-      enabled: true
     server:
-      ha:
-        enabled: false
-      dev:
-        enabled: false
-      dataStorage:
+      standalone:
         enabled: true
-      auditStorage:
-        enabled: false
-      service:
-        type: ClusterIP
-    injector:
-      enabled: true
+      extraConfig: |
+        ui = true
+
+        listener "tcp" {
+          address     = "0.0.0.0:8200"
+          tls_disable = 1
+        }
+
+        storage "file" {
+          path = "/vault/data"
+        }

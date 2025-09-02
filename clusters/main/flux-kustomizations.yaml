@@ -32,6 +32,24 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
+  name: cert-manager-issuers
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: cert-manager
+  interval: 1m
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./infrastructure/cert-manager-issuers
+  wait: true
+  timeout: 5m
+  retryInterval: 30s
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
   name: vault
   namespace: flux-system
 spec:
@@ -49,20 +67,19 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: cert-manager-issuers
+  name: vault-init
   namespace: flux-system
 spec:
   dependsOn:
-    - name: cert-manager
-  interval: 1m
+    - name: vault
+  interval: 5m
   prune: true
   sourceRef:
     kind: GitRepository
     name: flux-system
-  path: ./infrastructure/cert-manager-issuers
+  path: ./infrastructure/vault-init
   wait: true
   timeout: 5m
-  retryInterval: 30s
 # ---
 # apiVersion: kustomize.toolkit.fluxcd.io/v1
 # kind: Kustomization
@@ -78,6 +95,24 @@ spec:
 #     kind: GitRepository
 #     name: flux-system
 #   path: ./infrastructure/external-dns
+#   wait: true
+#   timeout: 5m
+#---
+# apiVersion: kustomize.toolkit.fluxcd.io/v1
+# kind: Kustomization
+# metadata:
+#   name: external-secrets
+#   namespace: flux-system
+# spec:
+#   dependsOn:
+#     - name: vault
+#     - name: cert-manager-issuers
+#   interval: 1m
+#   prune: true
+#   sourceRef:
+#     kind: GitRepository
+#     name: flux-system
+#   path: ./infrastructure/external-secrets
 #   wait: true
 #   timeout: 5m
 ---
@@ -114,3 +149,4 @@ spec:
   path: ./infrastructure/traefik
   wait: true
   timeout: 10m
+
