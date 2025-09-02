@@ -37,6 +37,7 @@ metadata:
 spec:
   dependsOn:
     - name: cert-manager
+    - name: vault-init
   interval: 1m
   prune: true
   sourceRef:
