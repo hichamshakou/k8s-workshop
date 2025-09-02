@@ -8,6 +8,7 @@ spec:
   issuerRef:
     kind: ClusterIssuer
     name: vault-issuer
+  commonName: testhicham.com
   dnsNames:
     - testhicham.com
     - www.testhicham.com
