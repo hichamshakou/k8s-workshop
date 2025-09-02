@@ -9,6 +9,6 @@ spec:
     kind: ClusterIssuer
     name: selfsigned
   dnsNames:
-    - 127.0.0.1.sslip.io
+    - testhicham.com
 
 #test
