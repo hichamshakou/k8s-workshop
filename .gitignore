@@ -1,0 +1,10 @@
+# Ignore Yaks test result directories
+_output/
+yaks-results/
+yaks-report/
+
+# Ignore any Yaks temporary files (if they start with .yaks)
+.yaks*
+
+# (Optional) Ignore any logs
+*.log
