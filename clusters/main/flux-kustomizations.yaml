@@ -123,7 +123,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
-  path: ./clusters/base/olm
+  path: ./infrastructure/olm
   prune: true
   sourceRef:
     kind: GitRepository
