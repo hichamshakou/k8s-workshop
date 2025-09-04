@@ -91,3 +91,9 @@ cert-manager (store in secret)
    ↓
 App (mount secret in volume)
 ```
+
+### Testing
+inside the folder k8s-workshop/test/kuttle , do the following command:
+```sh
+kubectl kuttl test e2e/
+```
