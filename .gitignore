@@ -8,3 +8,4 @@ yaks-report/
 
 # (Optional) Ignore any logs
 *.log
+*kubeconfig

@@ -5,12 +5,14 @@
 This repo deploys a some compnent on k8s to build a website used an automatic certificate via Flux, which include the following components:
 
 - Namespaces
-- external-dns (creates DNS records for your hostnames)
 - cert-manager (issues TLS certs from Let’s Encrypt or self-signed)
 - Vault (Secret management server)
+- Vault-init
 - App (example website with TLS Ingress)
 - external-dns
 - Traefik (Ingress, LoadBalancer)
+- olm (Operator Lifecycle Manager)
+- yaks (Kubernetes Acceptance Tests) + kuttle (Kustomize testing tool)
 
 ## Directory layout
 ```sh
@@ -41,12 +43,23 @@ repo-root/
 │  │  └─ kustomization.yaml
 │  ├─ cert-manager-issuers/
 │  │  ├─ selfsigned.yaml
-│  │  ├─ letsencrypt.yaml
+│  │  ├─ vault-issuer.yaml
 │  │  └─ kustomization.yaml
 │  └─ vault/
 │     ├─ helmrepository.yaml
 │     ├─ helmrelease.yaml
 │     └─ kustomization.yaml
+│  └─ vault-init/
+│     ├─ job-auth.yaml
+│     ├─ job-pki.yaml
+│     ├─ policy-cert-manager.hcl
+│     └─ kustomization.yaml
+│  └─ yaks/
+│     └─ kustomization.yaml
+│  └─ olm/
+│     ├─ kustomization.yaml
+│     ├─ crds.yaml
+│     └─ olm.yaml
 └─ apps/
    └─ website/
       ├─ namespace.yaml
@@ -66,3 +79,13 @@ flux bootstrap github \
   --personal \
   --token-auth
 
+## Certificate Lifecycle with Vault + cert-manager
+Develop (Git/Flux) (deployment + ingress + certificate)
+   ↓
+Cert-manager-Controller (CSR testhicham.com)
+   ↓
+Vault PKI (via API, Signed cert + CA)
+   ↓
+cert-manager (store in secret)
+   ↓
+App (mount secret in volume)

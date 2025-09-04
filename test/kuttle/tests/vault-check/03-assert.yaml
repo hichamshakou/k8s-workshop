@@ -1,0 +1,7 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-health-check
+  namespace: vault
+status:
+  succeeded: 1

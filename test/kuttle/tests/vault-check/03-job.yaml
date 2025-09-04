@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-health-check
+  namespace: vault
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: curl
+        image: curlimages/curl:8.5.0
+        command: ["sh", "-c"]
+        args:
+          - >
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://vault.vault.svc.cluster.local:8200/v1/sys/health);
+            test "$STATUS" -eq 200

@@ -1,0 +1,16 @@
+apiVersion: yaks.citrusframework.org/v1alpha1
+kind: Test
+metadata:
+  labels:
+    app: yaks
+  name: hello-world
+spec:
+  source:
+    content: |-
+      Feature: hello world
+
+        Scenario: print slogan
+          Given YAKS does Cloud-Native BDD testing
+          Then YAKS rocks!
+    language: feature
+    name: example.feature
