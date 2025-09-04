@@ -80,6 +80,7 @@ flux bootstrap github \
   --token-auth
 
 ## Certificate Lifecycle with Vault + cert-manager
+```sh
 Develop (Git/Flux) (deployment + ingress + certificate)
    ↓
 Cert-manager-Controller (CSR testhicham.com)
@@ -89,3 +90,4 @@ Vault PKI (via API, Signed cert + CA)
 cert-manager (store in secret)
    ↓
 App (mount secret in volume)
+```
