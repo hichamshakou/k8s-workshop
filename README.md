@@ -95,5 +95,6 @@ App (mount secret in volume)
 ### Testing
 inside the folder k8s-workshop/test/kuttle , do the following command:
 ```sh
+cd test/kuttl 
 kubectl kuttl test e2e/
 ```

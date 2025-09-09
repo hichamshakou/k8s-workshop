@@ -1,0 +1,6 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestSuite
+testDirs:
+  - ./e2e/vault-check
+parallel: 4
+timeout: 60
