@@ -1,0 +1,30 @@
+config:
+  namespace:
+    autoRemove: true
+    temporary: true
+
+pre:
+  - name: "Grant viewer access (Flux CRDs + Pods)"
+    run: |
+      kubectl create clusterrole yaks-flux-viewer-kustomization \
+        --verb="*"  --resource=kustomizations.kustomize.toolkit.fluxcd.io
+
+      kubectl create clusterrolebinding yaks-flux-viewer-kustomization-binding \
+        --clusterrole=yaks-flux-viewer-kustomization \
+        --serviceaccount=${YAKS_NAMESPACE}:yaks-viewer
+
+      kubectl create clusterrole yaks-flux-viewer-pod \
+        --verb='*' --resource=pods  --namespace=${YAKS_NAMESPACE}
+
+      kubectl create clusterrolebinding yaks-flux-viewer-binding-pod \
+        --clusterrole=yaks-flux-viewer-pod \
+        --serviceaccount=${YAKS_NAMESPACE}:yaks-viewer
+
+post:
+  - name: "Revoke viewer access"
+    run: |
+      kubectl delete clusterrole yaks-flux-viewer-kustomization
+      kubectl delete clusterrolebinding yaks-flux-viewer-kustomization-binding
+      kubectl delete clusterrole yaks-flux-viewer-pod
+      kubectl delete clusterrolebinding yaks-flux-viewer-binding-pod
+
