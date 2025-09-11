@@ -1,0 +1,11 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: vault
+  namespace: flux-system
+status: 
+  conditions: 
+    - type: Ready
+      status: "True"
+    - type: Healthy
+      status: "True"
