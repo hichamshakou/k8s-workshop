@@ -24,8 +24,10 @@ Feature: Verify Vault workload is up
 
 
   Scenario: Metrics Endpoint
-    Given URL: http://google.com
+    Given URL: http://testhicham.com
     #And HTTP request header Host="testhicham.com"
     #And HTTP client "insecureClient"
     When send GET /
     Then receive HTTP 200 OK
+
+    
