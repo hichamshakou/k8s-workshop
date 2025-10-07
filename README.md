@@ -107,3 +107,10 @@ inside the folder k8s-workshop/test/yaks , do the following command:
 cd vault
 yaks run kustomization1.feature
 ```
+
+
+### running github action 
+configura a local github runner and run the following to start the runner where the runner folder exist
+```
+./run.cmd
+```
