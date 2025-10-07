@@ -1,0 +1,41 @@
+name: Flux Deploy & KUTTL Test
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  kuttl-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Install KUTTL
+        run: |
+          curl -sSL https://github.com/kudobuilder/kuttl/releases/download/v0.15.0/kuttl_0.15.0_linux_x86_64.tar.gz | tar xz
+          sudo mv kubectl-kuttl /usr/local/bin/kubectl-kuttl
+
+      - name: Configure kubeconfig
+        run: |
+          echo "$KUBECONFIG_DATA" | base64 --decode > kubeconfig
+          export KUBECONFIG=$PWD/kubeconfig
+          kubectl cluster-info
+        env:
+          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG_DATA }}
+
+      - name: Wait for Flux to finish syncing
+        run: |
+          echo "Waiting for Flux sync..."
+          kubectl wait kustomization --all -n flux-system --for=condition=Ready=True --timeout=120s
+
+      - name: Run KUTTL tests
+        run: |
+          export KUBECONFIG=$PWD/kubeconfig
+          kubectl kuttl test ./test/kuttl --namespace vault
