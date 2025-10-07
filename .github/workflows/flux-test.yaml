@@ -40,4 +40,5 @@ jobs:
       - name: Run KUTTL tests
         run: |
           export KUBECONFIG=$PWD/kubeconfig
-          kubectl kuttl test ./test/kuttl --namespace vault
+          kubectl kuttl test ./test/kuttl/e2e --namespace vault
+
