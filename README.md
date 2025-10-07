@@ -93,8 +93,17 @@ App (mount secret in volume)
 ```
 
 ### Testing
+
+#### Kuttl
 inside the folder k8s-workshop/test/kuttle , do the following command:
 ```sh
 cd test/kuttl 
 kubectl kuttl test e2e/
+```
+
+#### Yaks
+inside the folder k8s-workshop/test/yaks , do the following command:
+```sh
+cd vault
+yaks run kustomization1.feature
 ```
