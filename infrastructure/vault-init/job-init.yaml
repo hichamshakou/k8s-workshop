@@ -7,7 +7,7 @@ spec:
   backoffLimit: 0
   template:
     spec:
-      serviceAccountName: default
+      serviceAccountName: vault-init-sa
       restartPolicy: Never
       containers:
       - name: vault-init
