@@ -6,8 +6,6 @@ metadata:
 spec:
   backoffLimit: 0
   template:
-    metadata:
-      name: vault-initializer
     spec:
       serviceAccountName: default
       restartPolicy: Never
@@ -22,6 +20,17 @@ spec:
           - /bin/sh
           - -c
           - |
+            set -e
+            apk add --no-cache jq curl bash
+            curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.30.0/bin/linux/amd64/kubectl"
+            chmod +x kubectl && mv kubectl /usr/local/bin/
+
+            echo "Waiting for Vault service..."
+            until curl -s $VAULT_ADDR/v1/sys/health >/dev/null 2>&1; do
+              echo "Waiting for Vault to be reachable..."
+              sleep 5
+            done
+
             echo "Checking if Vault is already initialized..."
             if vault status | grep -q 'Initialized.*true'; then
               echo "Vault is already initialized. Exiting."
@@ -30,17 +39,16 @@ spec:
 
             echo "Vault not initialized. Initializing..."
             INIT_OUTPUT=$(vault operator init -key-shares=3 -key-threshold=2 -format=json)
-            echo "$INIT_OUTPUT"
 
             echo "Saving unseal keys and root token into Secret..."
             UNSEAL_KEYS=$(echo "$INIT_OUTPUT" | jq -r '.unseal_keys_b64 | join(",")')
             ROOT_TOKEN=$(echo "$INIT_OUTPUT" | jq -r '.root_token')
 
-            kubectl create secret generic vault-init-keys \
+            /usr/local/bin/kubectl create secret generic vault-init-keys \
               --namespace vault \
               --from-literal=unseal_keys="$UNSEAL_KEYS" \
               --from-literal=root_token="$ROOT_TOKEN" \
-              --dry-run=client -o yaml | kubectl apply -f -
+              --dry-run=client -o yaml | /usr/local/bin/kubectl apply -f -
 
             echo "Unsealing Vault..."
             for key in $(echo "$UNSEAL_KEYS" | tr "," "\n" | head -n 2); do
