@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-initializer
+  namespace: vault
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      name: vault-initializer
+    spec:
+      serviceAccountName: default
+      restartPolicy: Never
+      containers:
+      - name: vault-init
+        image: hashicorp/vault:1.16
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: VAULT_ADDR
+            value: "http://vault.vault.svc:8200"
+        command:
+          - /bin/sh
+          - -c
+          - |
+            echo "Checking if Vault is already initialized..."
+            if vault status | grep -q 'Initialized.*true'; then
+              echo "Vault is already initialized. Exiting."
+              exit 0
+            fi
+
+            echo "Vault not initialized. Initializing..."
+            INIT_OUTPUT=$(vault operator init -key-shares=3 -key-threshold=2 -format=json)
+            echo "$INIT_OUTPUT"
+
+            echo "Saving unseal keys and root token into Secret..."
+            UNSEAL_KEYS=$(echo "$INIT_OUTPUT" | jq -r '.unseal_keys_b64 | join(",")')
+            ROOT_TOKEN=$(echo "$INIT_OUTPUT" | jq -r '.root_token')
+
+            kubectl create secret generic vault-init-keys \
+              --namespace vault \
+              --from-literal=unseal_keys="$UNSEAL_KEYS" \
+              --from-literal=root_token="$ROOT_TOKEN" \
+              --dry-run=client -o yaml | kubectl apply -f -
+
+            echo "Unsealing Vault..."
+            for key in $(echo "$UNSEAL_KEYS" | tr "," "\n" | head -n 2); do
+              vault operator unseal "$key"
+            done
+
+            echo "Vault initialized and unsealed successfully."
