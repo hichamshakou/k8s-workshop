@@ -62,15 +62,15 @@ spec:
                 echo "Manual intervention might be needed to recover unseal keys."
               fi
 
-              # Try to unseal using existing Secret if available
-              if /usr/local/bin/kubectl get secret vault-init-keys -n vault >/dev/null 2>&1; then
-                echo "Fetching unseal keys from Secret..."
-                KEYS=$(/usr/local/bin/kubectl get secret vault-init-keys -n vault -o jsonpath="{.data.unseal_keys}" | base64 -d)
-                echo "$KEYS" | tr "," "\n" | head -n 2 | while read key; do
-                  vault operator unseal "$key" || true
-                done
-                echo "Vault unseal attempted."
-              fi
+              # # Try to unseal using existing Secret if available
+              # if /usr/local/bin/kubectl get secret vault-init-keys -n vault >/dev/null 2>&1; then
+              #   echo "Fetching unseal keys from Secret..."
+              #   KEYS=$(/usr/local/bin/kubectl get secret vault-init-keys -n vault -o jsonpath="{.data.unseal_keys}" | base64 -d)
+              #   echo "$KEYS" | tr "," "\n" | head -n 2 | while read key; do
+              #     vault operator unseal "$key" || true
+              #   done
+              #   echo "Vault unseal attempted."
+              # fi
             fi
 
             echo "Job completed successfully."
