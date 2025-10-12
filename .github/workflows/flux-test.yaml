@@ -1,0 +1,61 @@
+name: Flux Deploy & KUTTL Test
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  kuttl-tests:
+    runs-on: self-hosted
+    env:
+      KUBECONFIG: ${{ github.workspace }}/kubeconfig
+      KUBECONFIG_DATA: ${{ secrets.KUBECONFIG_DATA }}
+
+    steps:
+      # not need to install it, becuase already exit in my machine
+      # - name: Install kubectl
+      #   uses: azure/setup-kubectl@v4
+      #   with:
+      #     version: 'latest'
+    
+      # kuttle already installed on my machine
+      # - name: Install KUTTL
+      #   run: |
+      #     curl -sSL https://github.com/kudobuilder/kuttl/releases/download/v0.15.0/kuttl_0.15.0_linux_x86_64.tar.gz | tar xz
+      #     sudo mv kubectl-kuttl /usr/local/bin/kubectl-kuttl
+
+
+      - uses: actions/checkout@v4
+
+      - name: Configure kubeconfig
+        run: |
+          echo "$KUBECONFIG_DATA" | base64 --decode > "$KUBECONFIG"
+          kubectl cluster-info
+
+      - name: Wait for Flux to finish syncing
+        run: |
+          echo "Waiting for all Flux kustomizations to be ready..."
+          kubectl wait kustomization --all -n flux-system \
+            --for=condition=Ready=True --timeout=300s || \
+            (echo "Some kustomizations not ready:" && kubectl get kustomization -n flux-system && exit 1)
+
+      - name: Run KUTTL tests
+        run: |
+          mkdir -p test-results/kuttl
+          kubectl kuttl test ./test/kuttl/e2e --namespace vault --report junit --artifacts-dir test-results/kuttl --timeout 60
+        continue-on-error: true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuttl-junit
+          path: test-results/kuttl
+
+      - name: Show diagnostics on failure
+        if: failure()
+        run: |
+          kubectl get pods -A
+          kubectl get events -A --sort-by='.lastTimestamp' | tail -n 50
+          exit 1

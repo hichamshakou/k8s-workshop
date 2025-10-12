@@ -1,0 +1,76 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-initializer
+  namespace: vault
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      serviceAccountName: vault-init-sa
+      restartPolicy: Never
+      containers:
+      - name: vault-init
+        image: hashicorp/vault:1.16
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: VAULT_ADDR
+            value: "http://vault.vault.svc:8200"
+        command:
+          - /bin/sh
+          - -c
+          - |
+            set -e
+
+            # Install tools we need
+            apk add --no-cache jq curl bash
+            curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.30.0/bin/linux/amd64/kubectl"
+            chmod +x kubectl && mv kubectl /usr/local/bin/
+
+            echo "Waiting for Vault service to be reachable..."
+            until curl -s $VAULT_ADDR/v1/sys/health >/dev/null 2>&1; do
+              echo "Waiting for Vault..."
+              sleep 5
+            done
+
+            echo "Checking if Vault is initialized..."
+            if vault status | grep -q 'Initialized.*false'; then
+              echo "Vault not initialized. Initializing..."
+              INIT_OUTPUT=$(vault operator init -key-shares=3 -key-threshold=2 -format=json)
+
+              UNSEAL_KEYS=$(echo "$INIT_OUTPUT" | jq -r '.unseal_keys_b64 | join(",")')
+              ROOT_TOKEN=$(echo "$INIT_OUTPUT" | jq -r '.root_token')
+
+              echo "Creating vault-init-keys Secret..."
+              /usr/local/bin/kubectl create secret generic vault-init-keys \
+                --namespace vault \
+                --from-literal=unseal_keys="$UNSEAL_KEYS" \
+                --from-literal=root_token="$ROOT_TOKEN" \
+                --dry-run=client -o yaml | /usr/local/bin/kubectl apply -f -
+
+              echo "Unsealing Vault..."
+              for key in $(echo "$UNSEAL_KEYS" | tr "," "\n" | head -n 2); do
+                vault operator unseal "$key"
+              done
+              echo "Vault initialized and unsealed."
+            else
+              echo "Vault is already initialized."
+
+              # Ensure secret exists
+              if ! /usr/local/bin/kubectl get secret vault-init-keys -n vault >/dev/null 2>&1; then
+                echo "Secret vault-init-keys not found, regenerating from existing status impossible."
+                echo "Manual intervention might be needed to recover unseal keys."
+              fi
+
+              # # Try to unseal using existing Secret if available
+              # if /usr/local/bin/kubectl get secret vault-init-keys -n vault >/dev/null 2>&1; then
+              #   echo "Fetching unseal keys from Secret..."
+              #   KEYS=$(/usr/local/bin/kubectl get secret vault-init-keys -n vault -o jsonpath="{.data.unseal_keys}" | base64 -d)
+              #   echo "$KEYS" | tr "," "\n" | head -n 2 | while read key; do
+              #     vault operator unseal "$key" || true
+              #   done
+              #   echo "Vault unseal attempted."
+              # fi
+            fi
+
+            echo "Job completed successfully."

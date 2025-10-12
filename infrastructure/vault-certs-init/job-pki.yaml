@@ -17,8 +17,8 @@ spec:
           - name: VAULT_TOKEN
             valueFrom:
               secretKeyRef:
-                name: vault-root-token
-                key: token  
+                name: vault-init-keys
+                key: root_token  
         command: ["/bin/sh", "-c"]
         args:
           - |

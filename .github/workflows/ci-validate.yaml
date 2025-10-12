@@ -1,0 +1,66 @@
+name: PR Validation - KUTTL Tests
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  validate:
+    runs-on: self-hosted
+    timeout-minutes: 20
+
+    steps:
+      # 1️⃣ Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Set up KinD (Kubernetes in Docker)
+      - name: Create KinD cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: flux-pr
+          wait: 120s
+
+      # 3️⃣ Install kubectl & KUTTL
+      - name: Install kubectl & KUTTL
+        run: |
+          curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.30.0/bin/linux/amd64/kubectl"
+          chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+          curl -sSL https://github.com/kudobuilder/kuttl/releases/download/v0.15.0/kuttl_0.15.0_linux_x86_64.tar.gz | tar xz
+          sudo mv kubectl-kuttl /usr/local/bin/
+
+      # 4️⃣ Deploy manifests like Flux would
+      - name: Deploy manifests (simulate Flux)
+        run: |
+          echo "Deploying base infrastructure..."
+          kubectl apply -k ./infrastructure/namespaces
+          kubectl apply -k ./infrastructure/traefik
+          kubectl apply -k ./infrastructure/cert-manager
+          kubectl apply -k ./infrastructure/vault
+          kubectl apply -k ./infrastructure/vault-init
+          echo "Deploying website app..."
+          kubectl apply -k ./apps/website
+          echo "All manifests applied."
+
+      # 5️⃣ Wait until everything is healthy
+      - name: Wait for pods to be ready
+        run: |
+          kubectl wait --for=condition=Ready pods --all --all-namespaces --timeout=180s || true
+          kubectl get pods -A
+
+      # 6️⃣ Run KUTTL tests
+      - name: Run KUTTL tests
+        run: |
+          mkdir -p test-results/kuttl
+          kubectl kuttl test ./test/kuttl/e2e --report junit --artifacts-dir test-results/kuttl --timeout 60
+
+      # 7️⃣ Upload KUTTL results (for GitHub Test tab)
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-kuttl-report
+          path: test-results/kuttl
