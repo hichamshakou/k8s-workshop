@@ -31,7 +31,12 @@ jobs:
           chmod +x kubectl && sudo mv kubectl /usr/local/bin/
           curl -sSL https://github.com/kudobuilder/kuttl/releases/download/v0.15.0/kuttl_0.15.0_linux_x86_64.tar.gz | tar xz
           sudo mv kubectl-kuttl /usr/local/bin/
-
+          
+      # step 0
+      - name: Install Flux CRDs
+        run: |
+          echo "Installing Flux CRDs..."
+          kubectl apply -k https://github.com/fluxcd/flux2/manifests/crds?ref=v2.3.0
       # 4️⃣ Deploy manifests like Flux would
       - name: Deploy manifests (simulate Flux)
         run: |
